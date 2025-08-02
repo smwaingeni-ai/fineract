@@ -574,3 +574,4 @@ Our `ClasspathHellDuplicatesCheckRuleTest` detects classes that appear in more t
 More Information
 ============
 More details of the project can be found at <https://cwiki.apache.org/confluence/display/FINERACT>.
+# Test build trigger
