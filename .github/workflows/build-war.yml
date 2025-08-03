@@ -22,10 +22,10 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build WAR file (skip tests, docs, spotbugs)
+      - name: Build WAR file (skip tests/docs/spotbugs)
         run: ./gradlew :fineract-war:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
-      - name: Verify WAR artifact
+      - name: Verify WAR exists
         run: ls -lh fineract-war/build/libs/
 
       - name: Upload WAR to server
@@ -34,7 +34,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "fineract-war/build/libs/*.war"
+          source: "fineract-war/build/libs/fineract-war.war"
           target: "/var/lib/tomcat9/webapps/"
 
       - name: Restart Tomcat
