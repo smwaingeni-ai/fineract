@@ -19,15 +19,23 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Configure Gradle Memory & Disable Daemon
+      - name: Configure Gradle memory
         run: |
-          echo "org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> gradle.properties
           echo "org.gradle.daemon=false" >> gradle.properties
 
-      - name: Make Gradle executable
+      - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build full project (skip tests/docs, avoid daemon)
+      - name: Provide minimal fineract.properties to prevent :resolve failure
+        run: |
+          mkdir -p fineract-provider/config
+          cat <<EOF > fineract-provider/config/fineract.properties
+fineract_tenants_config_file=./tenants.json
+EOF
+          echo '[{"name":"default","description":"Default Tenant","identifier":"default","databaseName":"fineract_tenants"}]' > fineract-provider/config/tenants.json
+
+      - name: Build WAR (skip tests/docs)
         run: |
           ./gradlew clean build -x test -x asciidoctor --no-daemon --warning-mode=none
           if [ ! -f fineract-provider/build/libs/fineract-provider.war ]; then
@@ -44,12 +52,13 @@ jobs:
           source: "fineract-provider/build/libs/fineract-provider.war"
           target: "/var/lib/tomcat9/webapps/"
 
-      - name: Restart Tomcat on server
+      - name: Restart Tomcat
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "Restarting Tomcat..."
             systemctl restart tomcat9
             sleep 10
