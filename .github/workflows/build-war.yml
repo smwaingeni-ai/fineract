@@ -1,4 +1,4 @@
-name: Build and Deploy Fineract WAR
+name: 🚀 Build and Deploy Fineract WAR
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -19,30 +19,34 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 🔧 Make Gradle executable
+      - name: 🔧 Make Gradle Executable
         run: chmod +x ./gradlew
 
-      - name: 🛠️ Build WAR
+      - name: 🛠️ Build Fineract Provider WAR
         run: ./gradlew :fineract-provider:bootJar -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
-      - name: 📂 List built files
-        run: ls -lh fineract-provider/build/libs/
+      - name: 📂 Find Final WAR
+        id: findwar
+        run: |
+          FILE=$(ls fineract-provider/build/libs/fineract-provider-*.jar | head -n 1)
+          echo "WAR_PATH=$FILE" >> $GITHUB_ENV
+          echo "✅ Found: $FILE"
 
-      - name: 🚀 Upload WAR to Server
+      - name: 🚀 Upload WAR to Tomcat Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "fineract-provider/build/libs/fineract-provider.jar"
-          target: "/var/lib/tomcat9/webapps/fineract-provider.war"
+          source: ${{ env.WAR_PATH }}
+          target: /var/lib/tomcat9/webapps/fineract-provider.war
 
-      - name: 🔁 Restart Tomcat
+      - name: 🔁 Restart Tomcat Service
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            systemctl restart tomcat9
-            echo "✅ Tomcat restarted"
+            sudo systemctl restart tomcat9
+            echo "✅ Tomcat restarted successfully"
