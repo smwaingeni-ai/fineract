@@ -19,17 +19,18 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Configure Gradle memory limits
+      - name: Set Gradle memory & disable daemon
         run: |
-          echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8" >> gradle.properties
+          echo "org.gradle.daemon=false" >> gradle.properties
 
-      - name: Grant Gradle wrapper permission
+      - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build proper WAR (skip tests/docs)
-        run: ./gradlew clean :fineract-provider:war -x test -x asciidoctor --no-daemon --stacktrace
+      - name: Build WAR (skip tests & docs)
+        run: ./gradlew :fineract-provider:war -x test -x asciidoctor --no-daemon --info
 
-      - name: Upload WAR to Tomcat server
+      - name: Upload WAR to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -38,13 +39,12 @@ jobs:
           source: "fineract-provider/build/libs/fineract-provider.war"
           target: "/var/lib/tomcat9/webapps/"
 
-      - name: Restart Tomcat
+      - name: Restart Tomcat on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Restarting Tomcat..."
             systemctl restart tomcat9
             sleep 10
