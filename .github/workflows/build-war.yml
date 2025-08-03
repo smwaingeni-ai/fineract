@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout full repo
+      - name: 📥 Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -19,25 +19,25 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 📦 Make Gradle executable
+      - name: 🔧 Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: 🛠️ Build WAR file
-        run: ./gradlew :fineract-war:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
+      - name: 🛠️ Build WAR
+        run: ./gradlew :fineract-provider:bootJar -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
-      - name: 📂 Verify WAR output
-        run: ls -lh fineract-war/build/libs/
+      - name: 📂 List built files
+        run: ls -lh fineract-provider/build/libs/
 
-      - name: 🚀 Upload WAR to server
+      - name: 🚀 Upload WAR to Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "fineract-war/build/libs/fineract-provider.war"
-          target: "/var/lib/tomcat9/webapps/"
+          source: "fineract-provider/build/libs/fineract-provider.jar"
+          target: "/var/lib/tomcat9/webapps/fineract-provider.war"
 
-      - name: 🔄 Restart Tomcat
+      - name: 🔁 Restart Tomcat
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
