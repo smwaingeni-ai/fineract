@@ -22,13 +22,13 @@ jobs:
       - name: 🔧 Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: 🛠️ Build WAR file (skip tests/docs/spotbugs)
-        run: ./gradlew :fineract-war:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
+      - name: 🛠️ Build WAR (skip tests/docs/spotbugs)
+        run: ./gradlew :fineract-provider:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
       - name: ✅ Verify WAR file exists
         run: |
-          ls -lh fineract-war/build/libs/
-          if [ ! -f fineract-war/build/libs/fineract.war ]; then
+          ls -lh fineract-provider/build/libs/
+          if [ ! -f fineract-provider/build/libs/fineract-provider.war ]; then
             echo "❌ WAR not found. Build may have failed."
             exit 1
           fi
@@ -39,7 +39,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "fineract-war/build/libs/fineract.war"
+          source: "fineract-provider/build/libs/fineract-provider.war"
           target: "/var/lib/tomcat9/webapps/"
 
       - name: 🔄 Restart Tomcat
@@ -52,12 +52,12 @@ jobs:
             systemctl restart tomcat9
             echo "✅ Tomcat restarted"
 
-      - name: 📡 Confirm deployment file
+      - name: 🧪 Confirm deployed WAR file
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "📂 Checking for deployed file:"
-            ls -lh /var/lib/tomcat9/webapps/fineract.war
+            echo "📂 Files in Tomcat webapps:"
+            ls -lh /var/lib/tomcat9/webapps/
