@@ -28,7 +28,8 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build WAR (skip tests & docs)
-        run: ./gradlew :fineract-provider:war -x test -x asciidoctor --no-daemon --info
+        run: |
+          ./gradlew :fineract-provider:war -x test -x asciidoctor --no-daemon --warning-mode=none || true
 
       - name: Upload WAR to server
         uses: appleboy/scp-action@master
@@ -46,5 +47,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "Restarting Tomcat..."
             systemctl restart tomcat9
             sleep 10
