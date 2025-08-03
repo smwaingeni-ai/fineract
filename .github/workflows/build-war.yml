@@ -22,10 +22,10 @@ jobs:
       - name: 🛠 Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: 🏗️ Build Fineract Provider WAR
-        run: ./gradlew :fineract-provider:bootWar -x test -x asciidoctor -x spotbugsMain -x spotbugsTest
+      - name: 🏗️ Build WAR (skip tests/docs/spotbugs)
+        run: ./gradlew :fineract-provider:war -x test -x asciidoctor -x spotbugsMain -x spotbugsTest
 
-      - name: 📂 List WAR output
+      - name: 📂 List WAR files for debug
         run: ls -lh fineract-provider/build/libs/
 
       - name: 🚀 Upload WAR to Tomcat server
