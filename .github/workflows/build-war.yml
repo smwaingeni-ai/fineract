@@ -19,19 +19,19 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set Gradle memory & disable daemon
+      - name: Configure Gradle Memory & Disable Daemon
         run: |
           echo "org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8" >> gradle.properties
           echo "org.gradle.daemon=false" >> gradle.properties
 
-      - name: Make Gradle wrapper executable
+      - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build WAR (skip tests & docs)
+      - name: Build full project (skip tests/docs, avoid daemon)
         run: |
-          ./gradlew :fineract-provider:war -x test -x asciidoctor --no-daemon --warning-mode=none
+          ./gradlew clean build -x test -x asciidoctor --no-daemon --warning-mode=none
           if [ ! -f fineract-provider/build/libs/fineract-provider.war ]; then
-            echo "❌ WAR file was not generated. Build failed."
+            echo "❌ WAR file not generated. Build failed."
             exit 1
           fi
 
@@ -51,6 +51,5 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Restarting Tomcat..."
             systemctl restart tomcat9
             sleep 10
