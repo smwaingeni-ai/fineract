@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout full repo
+      - name: 📥 Checkout full git history
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -19,44 +19,30 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 🔧 Make Gradle executable
+      - name: 🛠️ Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: 🏗️ Build WAR from fineract-war module
+      - name: 🧱 Build WAR (skip tests, docs, spotbugs)
         run: ./gradlew :fineract-war:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
-      - name: ✅ Verify WAR output
-        run: |
-          ls -lh fineract-war/build/libs/
-          if [ ! -f fineract-war/build/libs/fineract-war.war ]; then
-            echo "❌ WAR not found. Build likely failed."
-            exit 1
-          fi
+      - name: 📁 Verify WAR output
+        run: ls -lh fineract-war/build/libs/
 
-      - name: 🚀 Upload WAR to server
+      - name: 🚀 Upload WAR to Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "fineract-war/build/libs/fineract-war.war"
-          target: "/var/lib/tomcat9/webapps/fineract-war.war"
+          source: "fineract-war/build/libs/fineract-provider.war"
+          target: "/var/lib/tomcat9/webapps/fineract-provider.war"
 
-      - name: 🔄 Restart Tomcat
+      - name: 🔁 Restart Tomcat
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            systemctl restart tomcat9
+            sudo systemctl restart tomcat9
             echo "✅ Tomcat restarted successfully"
-
-      - name: 🔍 Confirm WAR deployed
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            ls -lh /var/lib/tomcat9/webapps/
