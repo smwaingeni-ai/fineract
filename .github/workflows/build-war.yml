@@ -22,15 +22,19 @@ jobs:
       - name: 🔧 Make Gradle Executable
         run: chmod +x ./gradlew
 
-      - name: 🛠 Build Proper Fineract WAR
+      - name: 🛠 Build Fineract WAR
         run: ./gradlew :fineract-war:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
-      - name: 📦 Locate WAR File
-        id: warfile
+      - name: 🕵️ Locate WAR file
+        id: findwar
         run: |
-          FILE=$(ls fineract-war/build/libs/fineract-war*.war | head -n 1)
-          echo "WAR_PATH=$FILE" >> $GITHUB_ENV
-          echo "✅ Found WAR at: $FILE"
+          WAR_FILE=$(find fineract-war/build/libs -name "*.war" | head -n 1)
+          if [ ! -f "$WAR_FILE" ]; then
+            echo "❌ WAR not found. Build failed."
+            exit 1
+          fi
+          echo "WAR_PATH=$WAR_FILE" >> $GITHUB_ENV
+          echo "✅ WAR found at: $WAR_FILE"
 
       - name: 🚀 Upload WAR to Tomcat
         uses: appleboy/scp-action@master
