@@ -22,7 +22,7 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build WAR file (skip tests/docs/spotbugs)
+      - name: Build WAR (skip tests/docs/spotbugs)
         run: ./gradlew :fineract-war:war -x test -x asciidoctor -x asciidoctorPdf -x spotbugsMain -x spotbugsTest
 
       - name: Verify WAR exists
