@@ -20,7 +20,7 @@ jobs:
           java-version: '21'
 
       - name: Build WAR file (skip docs and tests)
-        run: ./gradlew :fineract-provider:war -x test -x asciidoctor
+        run: ./gradlew :fineract-war:assemble -x test -x asciidoctor
 
       - name: Upload WAR as artifact
         uses: actions/upload-artifact@v4
