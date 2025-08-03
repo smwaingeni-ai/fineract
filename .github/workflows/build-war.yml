@@ -19,11 +19,11 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build WAR file (skip docs and tests)
+      - name: Build WAR file (skip tests and docs)
         run: ./gradlew :fineract-war:assemble -x test -x fineract-doc:asciidoctor -x fineract-doc:asciidoctorPdf
 
       - name: Upload WAR as artifact
         uses: actions/upload-artifact@v4
         with:
           name: fineract-provider
-          path: build/libs/fineract-provider.war
+          path: fineract-war/build/libs/fineract-provider.war
