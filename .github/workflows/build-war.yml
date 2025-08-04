@@ -33,9 +33,9 @@ jobs:
           cat <<EOF > fineract-provider/config/fineract.properties
 fineract_tenants_config_file=./tenants.json
 EOF
-          echo '[{"name":"default","description":"Default Tenant","identifier":"default","databaseName":"fineract_tenants"}]' > fineract-provider/config/tenants.json
+          echo '[{"name":"default","description":"Default Tenant","identifier":"default","databaseName":"fineract_default"}]' > fineract-provider/config/tenants.json
 
-      - name: Build WAR (skip tests/docs)
+      - name: Build WAR (skip tests & docs)
         run: |
           ./gradlew clean build -x test -x asciidoctor --no-daemon --warning-mode=none
           if [ ! -f fineract-provider/build/libs/fineract-provider.war ]; then
@@ -43,7 +43,7 @@ EOF
             exit 1
           fi
 
-      - name: Upload WAR to server
+      - name: Upload WAR to Tomcat server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -59,6 +59,5 @@ EOF
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Restarting Tomcat..."
             systemctl restart tomcat9
             sleep 10
