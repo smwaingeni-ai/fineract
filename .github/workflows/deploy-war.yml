@@ -19,8 +19,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build WAR (skip tests and docs)
-        run: ./gradlew clean build -x test -x asciidoctor
+      - name: Build WAR (SKIP tests + asciidoctor)
+        run: ./gradlew clean build -x test -x asciidoctor -x asciidoctorPdf --warning-mode all
 
       - name: Upload WAR to server
         uses: appleboy/scp-action@master
